@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".LaunchOtherAppActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20sp"
+                android:layout_marginTop="20sp"
+                android:text="音声認識"
+                android:textSize="50sp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="～別アプリ起動～"
+                android:textSize="30sp"
+                android:layout_below="@+id/title"
+                android:layout_centerHorizontal="true"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent">
+
+            <TextView
+                android:id="@+id/explain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="起動できるアプリ"
+                android:layout_marginLeft="20sp"
+                android:layout_marginTop="30sp"
+                android:textSize="30sp"/>
+
+            <LinearLayout
+                android:id="@+id/Apps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/explain"
+                android:layout_marginTop="10sp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="・ 「じゃんけんゲーム」"
+                    android:textSize="20sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="・ 「ファイルダウンローダー」"
+                    android:layout_marginTop="10sp"
+                    android:textSize="20sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="・ 「テトリス」"
+                    android:layout_marginTop="10sp"
+                    android:textSize="20sp"/>
+
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/mic"
+                android:layout_width="100sp"
+                android:layout_height="100sp"
+                android:layout_below="@+id/Apps"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="40sp"
+                android:src="@drawable/mic" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/mic"
+                android:text="音声入力方法: 「アプリ名」+「起動」"
+                android:textSize="20sp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="20sp"/>
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
