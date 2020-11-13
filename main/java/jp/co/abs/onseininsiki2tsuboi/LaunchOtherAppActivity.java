@@ -3,21 +3,15 @@ package jp.co.abs.onseininsiki2tsuboi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
-import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class LaunchOtherAppActivity extends AppCompatActivity {
 
@@ -28,13 +22,10 @@ public class LaunchOtherAppActivity extends AppCompatActivity {
     ArrayList<String> data;
 
     //別アプリ起動のためのパッケージ及びクラスの情報
-    List<PackageInfo> packageInfoList;
     PackageManager packageManager;
-    LaunchListAdapter mListAdapter;
-    String packageName;
-    String className;
 
     Intent intent;
+    Intent intent1;
     SpeechRecognizer recognizer;
 
     @Override
@@ -43,25 +34,6 @@ public class LaunchOtherAppActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         packageManager = getPackageManager();
-        packageInfoList = packageManager.getInstalledPackages(PackageManager.GET_ACTIVITIES | PackageManager.GET_SERVICES);
-        for(PackageInfo packageInfo : packageInfoList){
-            LaunchItem oLaunchItem = null;
-            if(packageManager.getLaunchIntentForPackage(packageInfo.packageName) != null){
-                packageName = packageInfo.packageName;
-                className = packageManager.getLaunchIntentForPackage(packageInfo.packageName).getComponent().getClassName()+"";
-                oLaunchItem = new LaunchItem(true,packageName,className);
-            }else{
-                oLaunchItem = new LaunchItem(false,packageInfo.packageName,null);
-            }
-        }
-
-        mListAdapter = new LaunchListAdapter(this.getApplicationContext());
-        mListAdapter.setLaunchAppListener(new LaunchListAdapter.LaunchAppListener(){
-            @Override
-            public void onLaunch(Intent intent){
-                startActivity(intent);
-            }
-        });
         imageview=findViewById(R.id.mic);
 
         if (getPackageManager().queryIntentActivities(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0).size() == 0) {
@@ -78,9 +50,32 @@ public class LaunchOtherAppActivity extends AppCompatActivity {
     @Override
     protected void onResume(){
         super.onResume();
+        speech();
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // 音声認識中にアプリから離れた場合、認識結果を破棄
+        if(data.size() != 0) {
+            data.remove(data.size());
+        }
+    }
+
+    public void speech(){
         recognizer = SpeechRecognizer.createSpeechRecognizer(this);
         recognizer.setRecognitionListener(new RecognitionListener() {
+
+            @Override
+            public void onReadyForSpeech(Bundle bundle) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                Toast.makeText(getApplicationContext(), "音声を入力してください", Toast.LENGTH_SHORT).show();
+            }
 
             @Override
             public void onBeginningOfSpeech() {
@@ -95,29 +90,75 @@ public class LaunchOtherAppActivity extends AppCompatActivity {
             @Override
             public void onResults(Bundle results) {
                 data = results.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION);
+                /*
+                if((data.get(0).contains("じゃんけん") && data.get(0).contains("起動")) == true){
+                    dataCheck("jp.co.abs.jankenver2");
+                }else if((data.get(0).contains("ファイル Downloader ") && data.get(0).contains("起動")) == true){
+                    dataCheck("jp.co.abs.filedownloaderver2_2");
+                }else if((data.get(0).contains("テトリス") && data.get(0).contains("起動")) == true){
+                    dataCheck("jp.co.abs.tetrisver2_1");
+                }else if((data.get(0).contains("じゃんけん") && data.get(0).contains("ファイル Downloader ")) == true){
+                    Toast.makeText(getApplicationContext(), "エラーが発生しました", Toast.LENGTH_SHORT).show();
+                }else if((data.get(0).contains("じゃんけん") && data.get(0).contains("テトリス")) == true){
+                    Toast.makeText(getApplicationContext(), "エラーが発生しました", Toast.LENGTH_SHORT).show();
+                }else if((data.get(0).contains("ファイル Downloader ") && data.get(0).contains("テトリス")) == true){
+                    Toast.makeText(getApplicationContext(), "エラーが発生しました", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(getApplicationContext(), "音声が正しく認識されていません", Toast.LENGTH_SHORT).show();
+                }
+                */
+                
+                //起動する別アプリの条件分岐
+                intent1 = null;
+                switch(data.get(0)){
+                    case "じゃんけん起動":
+                        dataCheck("jp.co.abs.jankenver2");
+                        break;
+                    case "ファイル Downloader 起動":
+                        dataCheck("jp.co.abs.filedownloaderver2_2");
+                        break;
+                    case "テトリス起動":
+                        dataCheck("jp.co.abs.tetrisver2_1");
+                        break;
+                    default :
+                        Toast.makeText(getApplicationContext(), "音声が正しく認識されていません", Toast.LENGTH_SHORT).show();
+                        data.remove(data.size()-1);
+                        break;
+                }
 
                 // 音声認識を繰り返す
                 recognizer.stopListening();
                 recognizer.startListening(intent);
             }
 
+            public void onError(int error) {
+
+                Toast.makeText(getApplicationContext(), "エラーが発生しました", Toast.LENGTH_SHORT).show();
+
+                recognizer.stopListening();
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                // 音声認識を繰り返す
+                recognizer.startListening(intent);
+            }
+
             // その他のメソッド RecognitionListenerの特性上記述が必須
-            public void onReadyForSpeech(Bundle bundle) { }
             public void onRmsChanged(float v) { }
             public void onBufferReceived(byte[] bytes) { }
-            public void onError(int error) { }
             public void onPartialResults(Bundle bundle) { }
             public void onEvent(int i, Bundle bundle) { }
         });
         recognizer.startListening(intent);
     }
-    @Override
-    protected void onPause() {
-        super.onPause();
 
-        // 音声認識中にアプリから離れた場合、認識結果を破棄
-            data.remove(data.size());
-
+    public void dataCheck(String packageName){
+        data.remove(data.size()-1);
+        intent1 = packageManager.getLaunchIntentForPackage(packageName);
+        startActivity(intent1);
     }
 
 }
