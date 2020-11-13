@@ -24,8 +24,8 @@ public class LaunchOtherAppActivity extends AppCompatActivity {
     //別アプリ起動のためのパッケージ及びクラスの情報
     PackageManager packageManager;
 
-    Intent intent;
-    Intent intent1;
+    Intent intent; // SpeechRecognizerに渡すIntent
+    Intent intent1; // 別アプリに遷移するためのIntent
     SpeechRecognizer recognizer;
 
     @Override
@@ -39,12 +39,12 @@ public class LaunchOtherAppActivity extends AppCompatActivity {
         if (getPackageManager().queryIntentActivities(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0).size() == 0) {
             return;
         }
-
         intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ja-JP");
         intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
         intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
+
     }
 
     @Override
@@ -61,6 +61,7 @@ public class LaunchOtherAppActivity extends AppCompatActivity {
         if(data.size() != 0) {
             data.remove(data.size());
         }
+        recognizer.stopListening();
     }
 
     public void speech(){
@@ -69,11 +70,6 @@ public class LaunchOtherAppActivity extends AppCompatActivity {
 
             @Override
             public void onReadyForSpeech(Bundle bundle) {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 Toast.makeText(getApplicationContext(), "音声を入力してください", Toast.LENGTH_SHORT).show();
             }
 
@@ -90,59 +86,71 @@ public class LaunchOtherAppActivity extends AppCompatActivity {
             @Override
             public void onResults(Bundle results) {
                 data = results.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION);
-                /*
-                if((data.get(0).contains("じゃんけん") && data.get(0).contains("起動")) == true){
-                    dataCheck("jp.co.abs.jankenver2");
-                }else if((data.get(0).contains("ファイル Downloader ") && data.get(0).contains("起動")) == true){
-                    dataCheck("jp.co.abs.filedownloaderver2_2");
-                }else if((data.get(0).contains("テトリス") && data.get(0).contains("起動")) == true){
-                    dataCheck("jp.co.abs.tetrisver2_1");
-                }else if((data.get(0).contains("じゃんけん") && data.get(0).contains("ファイル Downloader ")) == true){
-                    Toast.makeText(getApplicationContext(), "エラーが発生しました", Toast.LENGTH_SHORT).show();
-                }else if((data.get(0).contains("じゃんけん") && data.get(0).contains("テトリス")) == true){
-                    Toast.makeText(getApplicationContext(), "エラーが発生しました", Toast.LENGTH_SHORT).show();
-                }else if((data.get(0).contains("ファイル Downloader ") && data.get(0).contains("テトリス")) == true){
-                    Toast.makeText(getApplicationContext(), "エラーが発生しました", Toast.LENGTH_SHORT).show();
-                }else{
-                    Toast.makeText(getApplicationContext(), "音声が正しく認識されていません", Toast.LENGTH_SHORT).show();
-                }
-                */
-                
-                //起動する別アプリの条件分岐
-                intent1 = null;
-                switch(data.get(0)){
-                    case "じゃんけん起動":
-                        dataCheck("jp.co.abs.jankenver2");
-                        break;
-                    case "ファイル Downloader 起動":
-                        dataCheck("jp.co.abs.filedownloaderver2_2");
-                        break;
-                    case "テトリス起動":
-                        dataCheck("jp.co.abs.tetrisver2_1");
-                        break;
-                    default :
-                        Toast.makeText(getApplicationContext(), "音声が正しく認識されていません", Toast.LENGTH_SHORT).show();
-                        data.remove(data.size()-1);
-                        break;
-                }
 
-                // 音声認識を繰り返す
-                recognizer.stopListening();
-                recognizer.startListening(intent);
+                String jan = "じゃんけん";
+                String file = "ファイル";
+                String tet = "テトリス";
+                String start = "起動";
+                String errorCode = "エラーが発生しました";
+
+                if(data != null) {
+                    //起動する別アプリの条件分岐
+                    intent1 = null;
+                    if (data.get(0).contains(jan) && data.get(0).contains(start)) {
+                        dataCheck("jp.co.abs.jankenver2");
+                    } else if (data.get(0).contains(file) && data.get(0).contains(start)) {
+                        dataCheck("jp.co.abs.filedownloaderver2_2");
+                    } else if (data.get(0).contains(tet) && data.get(0).contains(start)) {
+                        dataCheck("jp.co.abs.tetrisver2_1");
+                    } else if (data.get(0).contains(jan) && data.get(0).contains(file)) {
+                        data.remove(data.size() - 1);
+                        Toast.makeText(getApplicationContext(), errorCode, Toast.LENGTH_SHORT).show();
+                    } else if (data.get(0).contains(jan) && data.get(0).contains(tet)) {
+                        data.remove(data.size() - 1);
+                        Toast.makeText(getApplicationContext(), errorCode, Toast.LENGTH_SHORT).show();
+                    } else if (data.get(0).contains(file) && data.get(0).contains(tet)) {
+                        data.remove(data.size() - 1);
+                        Toast.makeText(getApplicationContext(), errorCode, Toast.LENGTH_SHORT).show();
+                    } else {
+                        data.remove(data.size() - 1);
+                        Toast.makeText(getApplicationContext(), "音声が正しく認識されていません", Toast.LENGTH_SHORT).show();
+                    }
+
+                    // 音声認識を繰り返す
+                    recognizer.stopListening();
+
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    recognizer.startListening(intent);
+                }
             }
 
             public void onError(int error) {
 
-                Toast.makeText(getApplicationContext(), "エラーが発生しました", Toast.LENGTH_SHORT).show();
+                switch(error){
+                    case SpeechRecognizer.ERROR_NO_MATCH :
+                        Toast.makeText(getApplicationContext(), "エラーが発生しました", Toast.LENGTH_SHORT).show();
+                        break;
+                    case SpeechRecognizer.ERROR_SPEECH_TIMEOUT :
+                        Toast.makeText(getApplicationContext(), "エラーが発生しました", Toast.LENGTH_SHORT).show();
+                        break;
+                    default :
+                        break;
+                }
 
+                // 音声認識を繰り返す
                 recognizer.stopListening();
+
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 
-                // 音声認識を繰り返す
                 recognizer.startListening(intent);
             }
 
